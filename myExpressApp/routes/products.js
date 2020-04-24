@@ -4,9 +4,9 @@ const app = express()
 
 var cors = require('cors');
 app.use(cors());
+const { spawn } = require('child_process');
 
-
-
+const multer = require('multer')
 
 var router = express.Router();
 
@@ -16,22 +16,122 @@ const bodyParser = require('body-parser')
 
 //app.listen(5000 || 8100 , () => console.log('Example app listening on port 5000!'))
 
-app.listen( 5000,"10.3.14.214", () => console.log('Example app listening to ipv4 address!'))
+//app.listen( 5000,"10.3.14.214", () => console.log('Example app listening to ipv4 address!'))
 app.listen(5000, () => console.log('Example app listening on port 5000!'))
 //app.listen(5000, "192.168.1.84", () => console.log('Example app listening to ipv4 address!'))
-
+//app.listen(5000, "172.20.10.12", () => console.log('Example app listening to ipv4 address!'))
+app.listen(5000, "192.168.1.127", () => console.log('Example app listening to ipv4 address!'))
 app.listen(8100, () => console.log('Example app listening on port 8100!'))
 app.listen(8101, () => console.log('Example app listening on port 8101!'))
 // app.listen( 8100 , () => console.log('Example app listening on port 8100!'))
 
 app.get('/', (req, res) => {
-  res.send('Testing from backend')
+  var dataToSend;
+  // spawn new child process to call the python script
+  const python = spawn('python', ['script1.py']);
+  // collect data from script
+
+  python.stdout.on('data', function (data) {
+    console.log('Pipe data from python script ...');
+    dataToSend = data.toString();
+  });
+  // in close event we are sure that stream from child process is closed
+  python.on('close', (code) => {
+    console.log(`child process close all stdio with code ${code}`);
+    // send data to browser
+    res.send(dataToSend)
+  });
+
 })
 
 
-app.get('/getData', (req, res) => {
-  res.json({ 'message': 'Hello World' })
+const storage = multer.diskStorage({
+  destination: (req,file,callBack)=>{
+    callBack(null,'uploads')
+  },
+  filename:(req,file,callBack) => {
+    callBack(null,`${file.originalname}`)
+  }
 })
+
+var upload = multer({storage:storage})
+
+
+app.post('/file', upload.single('file'),async(req,res,next)=> {
+  const file = req.file
+  console.log(file.filename); 
+  var spawn = require("child_process").spawn; 
+  path = "C:\\Users\\Phyu\\backend-setup\\uploads\\" + file.filename ; 
+  console.log(path)
+  var process = spawn('python',["./data_analysis.py",path] ); 
+
+  if(!file)
+  {
+    const error = new Error('Please upload a file')
+    error.httpStatusCode = 400
+    return next(error)
+  }
+
+     process.stdout.on('data', function(data) { 
+        return res.json(data.toString()); 
+    } );
+})
+
+
+
+app.post('/name', callName);
+
+function callName(req, res) {
+  // Use child_process.spawn method from  
+    // child_process module and assign it 
+    // to variable spawn 
+    var spawn = require("child_process").spawn; 
+      
+    // Parameters passed in spawn - 
+    // 1. type_of_script 
+    // 2. list containing Path of the script 
+    //    and arguments for the script  
+      
+    // E.g : http://localhost:3000/name?firstname=Mike&lastname=Will 
+    // so, first name = Mike and last name = Will 
+    var process = spawn('python',["./hello.py", 
+                            req.query.firstname, 
+                            req.query.lastname] ); 
+  
+    // Takes stdout data from script which executed 
+    // with arguments and send this data to res object 
+    process.stdout.on('data', function(data) { 
+        res.send(data.toString()); 
+    } ) 
+  }
+app.post('/getData', (req, res) => {
+ // Use child_process.spawn method from  
+    // child_process module and assign it 
+    // to variable spawn 
+    var spawn = require("child_process").spawn; 
+      
+    // Parameters passed in spawn - 
+    // 1. type_of_script 
+    // 2. list containing Path of the script 
+    //    and arguments for the script  
+      
+    // E.g : http://localhost:3000/name?firstname=Mike&lastname=Will 
+    // so, first name = Mike and last name = Will 
+    var process = spawn('python',["./data_analysis.py"] ); 
+  
+    // Takes stdout data from script which executed 
+    // with arguments and send this data to res object 
+    process.stdout.on('data', function(data) { 
+        res.send(data.toString()); 
+    } );
+
+    
+     
+})
+
+
+
+
 
 app.post('/postData', bodyParser.json(), (req, res) => {
   res.json(req.body.firstName + "this comes from backend")
@@ -96,10 +196,11 @@ app.post('/insertonHandData', bodyParser.json(), function (req, res) {
 
   var code = req.body.SKU_CodeonHand;
   var quan = req.body.onHandQuantity;
+  var month = req.body.month;
   console.log(code)
   console.log(quan)
-
-  InsertonHandData(code, quan, function (recordset) { res.send(recordset); });
+  console.log(month)
+  InsertonHandData(code, quan,month, function (recordset) { res.send(recordset); });
 
 });
 
@@ -300,7 +401,7 @@ function InsertData(code, cate, ucost, callback) {
 
 }
 
-function InsertonHandData(codeonHand, onHandQuantity, callback) {
+function InsertonHandData(codeonHand, onHandQuantity,month, callback) {
 
   console.log(code);
   var time = 2018 - 01 - 12; //Change later
@@ -320,7 +421,7 @@ function InsertonHandData(codeonHand, onHandQuantity, callback) {
     if (err) console.log(err);
 
     var request = new sql.Request(connection);
-    request.query("Insert into LoadedCombinedData(SKUcode,onHand) Values	('" + codeonHand + "'," + onHandQuantity + ")", function (err, recordset) {
+    request.query("Insert into LoadedCombinedData(SKUcode,Monthly,onHand) Values	('" + codeonHand + "','" + month +"',"+ onHandQuantity + ")", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
@@ -329,6 +430,8 @@ function InsertonHandData(codeonHand, onHandQuantity, callback) {
 }
 
 module.exports = router
+
+
 
 
 

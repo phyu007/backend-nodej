@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\Python37_64\\python.exe",
+    "python.dataScience.jupyterServerURI": "http://localhost:8889/?token=ad25405a419f9ec3283ccb84b41dd3c275c63e16621cb300",
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": true
+}
