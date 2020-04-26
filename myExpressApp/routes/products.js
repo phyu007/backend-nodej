@@ -163,7 +163,7 @@ app.post('/demand', (req, res) => {
 
 
 
-var test = ''; var code = ''; var cat = ''; var cost = '';
+var test = ''; var code = ''; var cat = ''; var cost = ''; var time;
 
 // app.post('/OnHandCost', bodyParser.json(), function(req, res){
 
@@ -188,6 +188,21 @@ app.post('/OnHandLoadedCost', bodyParser.json(), function (req, res) {
   console.log(test)
 
   OnHandLoadedCost(test, function (recordset) { res.send(recordset); });
+
+});
+
+
+app.post('/OnHandLoadedCostByTimeStamp', bodyParser.json(), function (req, res) {
+
+
+  console.log("This is insided onhand loaded cost by timestamp" + req);
+  test = req.body.newVal;
+  time =  req.body.time;
+
+  console.log(test)
+  console.log(time)
+
+  OnHandLoadedCostByTimeStamp(test,time, function (recordset) { res.send(recordset); });
 
 });
 
@@ -318,6 +333,34 @@ function OnHandCost(cat, callback) {
 }
 
 
+// function OnHandLoadedCost(cat, callback) {
+
+//   console.log(cat);
+//   var time = 2018 - 01 - 12; //Change later
+
+//   var sql = require('mssql');
+//   var config = {
+//     user: 'sa',
+//     password: 'sa1234',
+//     database: 'Inventory',
+//     server: 'DESKTOP-CCDK3QN'
+
+//   };
+
+//   var connection = new sql.ConnectionPool(config, function (err) {
+
+//     //check for errors by inspecting the err parameter
+//     if (err) console.log(err);
+
+//     var request = new sql.Request(connection);
+//     request.query("Select *, UnitCost*LoadedCombinedData.onHand As totalOnHand from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'", function (err, recordset) {
+//       if (err) console.log(err);
+//       callback(recordset);
+//     });
+//   });
+
+// }
+
 function OnHandLoadedCost(cat, callback) {
 
   console.log(cat);
@@ -338,7 +381,36 @@ function OnHandLoadedCost(cat, callback) {
     if (err) console.log(err);
 
     var request = new sql.Request(connection);
-    request.query("Select *, UnitCost*LoadedCombinedData.onHand As totalOnHand from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'", function (err, recordset) {
+    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+
+function OnHandLoadedCostByTimeStamp(cat,time, callback) {
+
+  console.log(cat);
+  var time = 2018 - 01 - 12; //Change later
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'Inventory',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "AND  DATEDIFF(MONTH, LoadedCombinedData.Monthly, (SELECT MAX (Monthly) FROM LoadedCombinedData)) <="+ time + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
