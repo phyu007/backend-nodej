@@ -219,6 +219,51 @@ app.post('/insertonHandData', bodyParser.json(), function (req, res) {
 
 });
 
+app.post('/OnhandMonthEndCpps2', bodyParser.json(), function (req, res) {
+
+
+  let WarehouseID = req.body.WarehouseID;
+  let ItemID = req.body.ItemID;
+  let SKU_CodeonHand = req.body.SKU_CodeonHand;
+ // let SKU_NameonHand = req.body.SKU_NameonHand;
+  let month = req.body.month ; 
+  let onHandQuantity = req.body.onHandQuantity
+  console.log(WarehouseID)
+  console.log(ItemID)
+  console.log(SKU_CodeonHand)
+  console.log(month)
+  console.log(onHandQuantity)
+  OnhandMonthEndCpps2(WarehouseID,ItemID, SKU_CodeonHand,month,onHandQuantity, function (recordset) { res.send(recordset); });
+
+});
+
+
+
+app.post('/getCategoryIDcpps2',bodyParser.json(), function (req, res) {
+  
+  let cat = req.body.SKU_Cat
+
+  getCategorycpps2(cat,function (recordset) {
+    res.send(recordset);
+
+  });
+
+
+
+});
+
+app.post('/getItemIDCpps',bodyParser.json(), function (req, res) {
+  
+  let SKU_Code = req.body.SKU_Code
+
+  getItemIDCpps(SKU_Code,function (recordset) {
+    res.send(recordset);
+
+  });
+
+
+
+});
 
 
 app.post('/insertData', bodyParser.json(), function (req, res) {
@@ -236,6 +281,25 @@ app.post('/insertData', bodyParser.json(), function (req, res) {
 
 
   InsertData(code, cat, cost, function (recordset) { res.send(recordset); });
+
+});
+
+app.post('/insertDatacpps2', bodyParser.json(), function (req, res) {
+
+
+  console.log(req);
+  let ItemID = req.body.ItemID;
+  let  ItemName = req.body.ItemName;
+  let ShortName = req.body.ShortName;
+  let CategoryID = req.body.CategoryID;
+
+
+  console.log(ItemID)
+  console.log(ItemName)
+  console.log(ShortName);
+  console.log(CategoryID);
+
+  insertDatacpps2(ItemID, ItemName, ShortName,CategoryID, function (recordset) { res.send(recordset); })
 
 });
 
@@ -392,8 +456,8 @@ function OnHandLoadedCost(cat, callback) {
 
 function OnHandLoadedCostByTimeStamp(cat,time, callback) {
 
-  console.log(cat);
-  var time = 2018 - 01 - 12; //Change later
+  console.log(cat)
+  console.log(time)
 
   var sql = require('mssql');
   var config = {
@@ -410,7 +474,7 @@ function OnHandLoadedCostByTimeStamp(cat,time, callback) {
     if (err) console.log(err);
 
     var request = new sql.Request(connection);
-    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "AND  DATEDIFF(MONTH, LoadedCombinedData.Monthly, (SELECT MAX (Monthly) FROM LoadedCombinedData)) <="+ time + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
+    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "AND  DATEDIFF(MONTH, LoadedCombinedData.Monthly, (SELECT MAX (Monthly) FROM LoadedCombinedData)) <"+ time + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
@@ -445,6 +509,59 @@ function getCategory(callback) {
 }
 
 
+
+
+function getCategorycpps2(cat,callback) {
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'cpps2',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Select CategoryID from Inventory.FullCategoryList Where CategoryName = '" +cat +"'", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+function getItemIDCpps(cat,callback) {
+
+  console.log(cat);
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'cpps2',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Select ItemID from Inventory.FullItemList where ItemName = '" +cat +"'", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
 function InsertData(code, cate, ucost, callback) {
 
   console.log(code);
@@ -473,6 +590,38 @@ function InsertData(code, cate, ucost, callback) {
 
 }
 
+
+
+function insertDatacpps2(ItemID,ItemName,ShortName,CategoryID , callback) {
+
+  console.log(code);
+  var time = 2018 - 01 - 12; //Change later
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'cpps2',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Insert into Inventory.FullItemList(ItemID,ItemName,ShortName,CategoryID) Values (" + ItemID + ",'" + ItemName + "','" + ShortName + "',"+ CategoryID + ")", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+
+
 function InsertonHandData(codeonHand, onHandQuantity,month, callback) {
 
   console.log(code);
@@ -494,6 +643,34 @@ function InsertonHandData(codeonHand, onHandQuantity,month, callback) {
 
     var request = new sql.Request(connection);
     request.query("Insert into LoadedCombinedData(SKUcode,Monthly,onHand) Values	('" + codeonHand + "','" + month +"',"+ onHandQuantity + ")", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+function OnhandMonthEndCpps2(WarehouseID, ItemID,ItemName,Month,OnhandQty, callback) {
+
+  console.log(code);
+  var time = 2018 - 01 - 12; //Change later
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'cpps2',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Insert into Inventory.OnhandMonthEnd(WarehouseID,ItemID,ItemName,Month,OnhandQty) Values(" + WarehouseID + "," +ItemID +",'" + ItemName +"','"+ Month + "',"+ OnhandQty + ")", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
