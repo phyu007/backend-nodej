@@ -233,7 +233,7 @@ app.post('/OnhandMonthEndCpps2', bodyParser.json(), function (req, res) {
   console.log(SKU_CodeonHand)
   console.log(month)
   console.log(onHandQuantity)
-  OnhandMonthEndCpps2(WarehouseID,ItemID, SKU_CodeonHand,month,onHandQuantity, function (recordset) { res.send(recordset); });
+  OnhandMonthEndCpps2(WarehouseID,ItemID, SKU_CodeonHand,onHandQuantity,month, function (recordset) { res.send(recordset); });
 
 });
 
@@ -257,6 +257,7 @@ app.post('/getItemIDCpps',bodyParser.json(), function (req, res) {
   let SKU_Code = req.body.SKU_Code
 
   getItemIDCpps(SKU_Code,function (recordset) {
+    console.log(recordset);
     res.send(recordset);
 
   });
@@ -624,8 +625,6 @@ function insertDatacpps2(ItemID,ItemName,ShortName,CategoryID , callback) {
 
 function InsertonHandData(codeonHand, onHandQuantity,month, callback) {
 
-  console.log(code);
-  var time = 2018 - 01 - 12; //Change later
 
   var sql = require('mssql');
   var config = {
@@ -650,7 +649,7 @@ function InsertonHandData(codeonHand, onHandQuantity,month, callback) {
 
 }
 
-function OnhandMonthEndCpps2(WarehouseID, ItemID,ItemName,Month,OnhandQty, callback) {
+function OnhandMonthEndCpps2(WarehouseID, ItemID,ItemName,OnhandQty,Month, callback) {
 
   console.log(code);
   var time = 2018 - 01 - 12; //Change later
