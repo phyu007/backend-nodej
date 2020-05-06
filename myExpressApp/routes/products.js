@@ -446,7 +446,7 @@ function OnHandLoadedCost(cat, callback) {
     if (err) console.log(err);
 
     var request = new sql.Request(connection);
-    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
+    request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "Group by LoadedCombinedData.Monthly Order By LoadedCombinedData.Monthly DESC ", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
