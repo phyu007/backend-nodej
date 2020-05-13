@@ -206,6 +206,22 @@ app.post('/OnHandLoadedCostByTimeStamp', bodyParser.json(), function (req, res) 
 
 });
 
+
+app.post('/auth', bodyParser.json(), function (req, res) {
+
+
+  console.log("This is insided auth for authentication" + req);
+  let username = req.body.username;
+  let password =  req.body.password;
+
+  console.log(test)
+  console.log(time)
+
+  auth(username,password, function (recordset) { res.send(recordset); });
+
+});
+
+
 app.post('/insertonHandData', bodyParser.json(), function (req, res) {
 
 
@@ -476,6 +492,34 @@ function OnHandLoadedCostByTimeStamp(cat,time, callback) {
 
     var request = new sql.Request(connection);
     request.query("Select SUM(UnitCost*LoadedCombinedData.onHand) As totalOnHand,LoadedCombinedData.Monthly from LoadedData Inner Join LoadedCombinedData On LoadedData.SKUcode = LoadedCombinedData.SKUcode where LoadedData.Category = '" + cat + "'" + "AND  DATEDIFF(MONTH, LoadedCombinedData.Monthly, (SELECT MAX (Monthly) FROM LoadedCombinedData)) <"+ time + "Group by LoadedCombinedData.Monthly", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+function auth(username,password, callback) {
+
+  console.log(username)
+  console.log(password)
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'Inventory',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("Select * from [Inventory].[dbo].[User]", function (err, recordset) {
       if (err) console.log(err);
       callback(recordset);
     });
