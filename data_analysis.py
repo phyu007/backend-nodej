@@ -8,6 +8,7 @@ import sys
 
 # data = pd.read_excel(r'C:\Users\Phyu\Downloads\Testing data (Phyu) (1).xlsx')
 data = pd.ExcelFile(sys.argv[1])
+chosen_sheet = sys.argv[2]
 #print(sys.argv[1])
 sys.stdout.flush()
 
@@ -19,7 +20,7 @@ print(data.sheet_names)
 
 
 # %%
-data.parse(sheetname='Part Master', skiprows=0).head(
+data.parse(sheetname= chosen_sheet, skiprows=0).head(
     10)  # get Part Master Sheet names
 
 

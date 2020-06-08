@@ -59,11 +59,14 @@ var upload = multer({storage:storage})
 
 app.post('/file', upload.single('file'),async(req,res,next)=> {
   const file = req.file
+  const sheetname = req.query.sheetname
+  console.log(sheetname)
+  console.log(req)
   console.log(file.filename); 
   var spawn = require("child_process").spawn; 
   path = "C:\\Users\\Phyu\\backend-setup\\uploads\\" + file.filename ; 
   console.log(path)
-  var process = spawn('python',["./data_analysis.py",path] ); 
+  var process = spawn('python',["./data_analysis.py",path,sheetname] ); 
 
   if(!file)
   {
@@ -165,17 +168,17 @@ app.post('/demand', (req, res) => {
 
 var test = ''; var code = ''; var cat = ''; var cost = ''; var time;
 
-// app.post('/OnHandCost', bodyParser.json(), function(req, res){
+app.post('/OnHandCost', bodyParser.json(), function(req, res){
 
 
-//   console.log(req);
-// test = req.body.newVal;
+  console.log(req);
+test = req.body.newVal;
 
-// console.log(test)
+console.log(test)
 
-//  OnHandCost( test,function (recordset) { res.send(recordset); });
+ OnHandCost( test,function (recordset) { res.send(recordset); });
 
-// });
+});
 
 
 
@@ -220,6 +223,16 @@ app.post('/auth', bodyParser.json(), function (req, res) {
   auth(username,password, function (recordset) { res.send(recordset); });
 
 });
+
+
+
+app.post('/isLoggedIn', function (req, res) {
+
+  isLoggedIn(function (recordset) { res.send(recordset); });
+
+
+});
+
 
 
 app.post('/insertonHandData', bodyParser.json(), function (req, res) {
@@ -526,6 +539,35 @@ function auth(username,password, callback) {
   });
 
 }
+
+
+
+function isLoggedIn(callback) {
+
+  var sql = require('mssql');
+  var config = {
+    user: 'sa',
+    password: 'sa1234',
+    database: 'Inventory',
+    server: 'DESKTOP-CCDK3QN'
+
+  };
+
+  var connection = new sql.ConnectionPool(config, function (err) {
+
+    //check for errors by inspecting the err parameter
+    if (err) console.log(err);
+
+    var request = new sql.Request(connection);
+    request.query("SELECT TOP (1000) [IsLoggedIn] FROM [Inventory].[dbo].[LoggedIn]", function (err, recordset) {
+      if (err) console.log(err);
+      callback(recordset);
+    });
+  });
+
+}
+
+
 
 
 function getCategory(callback) {
